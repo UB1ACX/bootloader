@@ -22,26 +22,22 @@
 ; * MA 02111-1307 USA
 ; */
 
-        INCLUDE    boot0_i.inc
+	INCLUDE    boot0_i.inc
 
-    	IMPORT   Boot0_C_part
-		IMPORT   cpu_init_s
+	IMPORT   Boot0_C_part
+	IMPORT   cpu_init_s
 
-		PRESERVE8
-
-
-        AREA  init, CODE, READONLY
-        CODE32
-		ENTRY
+	PRESERVE8
 
 
+	AREA  init, CODE, READONLY
+	CODE32
+	ENTRY
 
-;/*********************************the begin of initializing system********************************/
 
-
+;/******************************** the begin of initializing system *******************************/
 
 initialize
-
 
 	mrs r0, cpsr
 	bic r0, r0, #ARMV7_MODE_MASK
@@ -49,7 +45,6 @@ initialize
 	orr r0, r0, #( ARMV7_IRQ_MASK | ARMV7_FIQ_MASK )    ;// After reset, ARM automaticly disables IRQ and FIQ, and runs in SVC mode.
 	bic r0, r0, #ARMV7_CC_E_BIT                         ;// set little-endian
 	msr cpsr_c, r0
-
 
 ;// configure memory system : disable MMU,cache and write buffer; set little_endian;
 	mrc p15, 0, r0, c1, c0
@@ -63,11 +58,11 @@ initialize
 
 ;// cpu init
 	bl  cpu_init_s
-;/**********************************the end of initializing system*********************************/
+
+;/********************************* the end of initializing system ********************************/
+
 	bl  Boot0_C_part
 
- 	b .                                 ;// infinite loop
-
-
+	b .                                 ;// infinite loop
 
 	END

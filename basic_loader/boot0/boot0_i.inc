@@ -22,15 +22,12 @@
 ; * MA 02111-1307 USA
 ; */
 ;
-    IF :LNOT::DEF:__boot0_i_inc
-	GBLA  __boot0_i_inc
+	IF :LNOT::DEF:__boot0_i_inc
 
+		GBLA	__boot0_i_inc
+		GBLA	USE_PHYSICAL_ADDRESS
+		INCLUDE	egon2.inc
 
-	GBLA    USE_PHYSICAL_ADDRESS
+	ENDIF		;;; IF :LNOT::DEF:__boot0_i_inc
 
-	INCLUDE   egon2.inc
-
-
-	ENDIF     ;;; IF :LNOT::DEF:__boot0_i_inc
-
-	END       ;;; end of boot0_i.inc
+	END			;;; end of boot0_i.inc

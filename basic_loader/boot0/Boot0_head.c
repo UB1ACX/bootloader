@@ -22,102 +22,88 @@
  * MA 02111-1307 USA
  */
 
-#include "boot0_i.h"
+#include	"boot0_i.h"
 
-#pragma  arm section  rodata="bt0_head"
+#pragma		arm section rodata="bt0_head"
 
-#define   DDR3_USED
+#define		DDR3_USED
 
-const boot0_file_head_t  BT0_head = {
-	                                  {
-	      /* jump_instruction */          ( 0xEA000000 | ( ( ( sizeof( boot0_file_head_t ) + sizeof( int ) - 1 ) / sizeof( int ) - 2 ) & 0x00FFFFFF ) ),
-							   		      BOOT0_MAGIC,
-							   		      STAMP_VALUE,
-#ifdef ALIGN_SIZE_8K
-									      0x2000,
+const boot0_file_head_t BT0_head =	{
+										{
+											/* jump_instruction */          
+											( 0xEA000000 | ( ( ( sizeof( boot0_file_head_t ) + sizeof( int ) - 1 ) / sizeof( int ) - 2 ) & 0x00FFFFFF ) ),
+											BOOT0_MAGIC,
+											STAMP_VALUE,
+#ifdef	ALIGN_SIZE_8K
+											0x2000,
 #else
-                                                                              0x4000,
+											0x4000,
 #endif
-							   		      sizeof( boot_file_head_t ),
-							   		      BOOT_PUB_HEAD_VERSION,
-							   		      0,
-							   		      0,
-							   		      EGON_VERSION,
-							   		      {
-							   		      	0, 0, '3','.','1','.','0',0
-							   		      },
-							 	      },
-#ifdef  DDR3_USED
-							 	      {
-							 	          sizeof( boot0_private_head_t ),
-							 	          BOOT0_PRVT_HEAD_VERSION,
-							 	          { 0 },
-							 	          0,
-										  {
-										  	{ 2, 0, 3, 1, 1, 0, 0, 0},
-											{ 2, 1, 3, 1, 1, 0, 0, 0}
-										  },
-							 	          0,
-							 	          { 0 },
-							 	          {
-										  	{ 6, 0, 2, 1, 2, 0, 0, 0},
-											{ 6, 1, 2, 1, 2, 0, 0, 0},
-											{ 6, 2, 2, 1, 2, 0, 0, 0},
-											{ 6, 3, 2, 1, 2, 0, 0, 0},
-											{ 6, 4, 2, 1, 2, 0, 0, 0},
-											{ 6, 5, 2, 1, 2, 0, 0, 0},
-										  },
-										  { 0 }
-							 	      }
+											sizeof( boot_file_head_t ),
+											BOOT_PUB_HEAD_VERSION,
+											0,
+											0,
+											EGON_VERSION,
+											{ 0, 0, '3','.','1','.','0',0 },
+										},
+#ifdef	DDR3_USED
+										{
+											sizeof( boot0_private_head_t ),
+											BOOT0_PRVT_HEAD_VERSION,
+											{ 0 },
+											0,
+											{
+												{ 2, 0, 3, 1, 1, 0, 0, 0},
+												{ 2, 1, 3, 1, 1, 0, 0, 0}
+											},
+											0,
+											{ 0 },
+											{
+												{ 6, 0, 2, 1, 2, 0, 0, 0},
+												{ 6, 1, 2, 1, 2, 0, 0, 0},
+												{ 6, 2, 2, 1, 2, 0, 0, 0},
+												{ 6, 3, 2, 1, 2, 0, 0, 0},
+												{ 6, 4, 2, 1, 2, 0, 0, 0},
+												{ 6, 5, 2, 1, 2, 0, 0, 0},
+											},
+											{ 0 }
+										}
 #else
-							 	      {
-							 	          sizeof( boot0_private_head_t ),
-							 	          BOOT0_PRVT_HEAD_VERSION,
-							 	          { 0x40000000,
-							 	            1024,
-							 	            180,
-							 	            1,
-							 	            1,
-							 	            0,
-							 	            (__dram_type_e)1,
-							 	            16,
-							 	            10,
-							 	            14,
-							 	            4,
-							 	            3,
-							 	            0,
-							 	            16,
-							 	            1024
-							 	          },
-							 	          0,
-										  {
-										  	{ 2, 22, 4, 1, 1, 0, 0, 0},
-										  	{ 2, 23, 4, 1, 1, 0, 0, 0}
-										  },
-							 	          0,
-							 	          { 0 },
-							 	          { 0 },
-							 	          { 0 }
-							 	      }
+										{
+											sizeof( boot0_private_head_t ),
+											BOOT0_PRVT_HEAD_VERSION,
+											{ 0x40000000, 1024, 180, 1, 1, 0, (__dram_type_e)1, 16, 10, 14, 4, 3, 0, 16, 1024 },
+											0,
+											{
+												{ 2, 22, 4, 1, 1, 0, 0, 0},
+												{ 2, 23, 4, 1, 1, 0, 0, 0}
+											},
+											0,
+											{ 0 },
+											{ 0 },
+											{ 0 }
+										}
 #endif
-							 	  };
-
+									};
 
 
 /*******************************************************************************
 *
-*                  关于Boot_file_head中的jump_instruction字段
+*                  On "Boot_file_head" moderate jump_instruction field
 *
-*  jump_instruction字段存放的是一条跳转指令：( B  BACK_OF_Boot_file_head )，此跳
-*转指令被执行后，程序将跳转到Boot_file_head后面第一条指令。
+* The field stores a jump instruction：( B  BACK_OF_Boot_file_head )，
+* After this jump instruction is executed, the program will jump to the first instruction after Boot_file_head.
 *
-*  ARM指令中的B指令编码如下：
+* ARM 
+* The B command in the instruction is encoded as follows：
 *          +--------+---------+------------------------------+
 *          | 31--28 | 27--24  |            23--0             |
 *          +--------+---------+------------------------------+
 *          |  cond  | 1 0 1 0 |        signed_immed_24       |
 *          +--------+---------+------------------------------+
-*  《ARM Architecture Reference Manual》对于此指令有如下解释：
+*
+* 《ARM Architecture Reference Manual》
+* The following explanation for this instruction：
 *  Syntax :
 *  B{<cond>}  <target_address>
 *    <cond>    Is the condition under which the instruction is executed. If the
@@ -131,13 +117,13 @@ const boot0_file_head_t  BT0_head = {
 *              3.  Adding to the contents of the PC, which contains the address
 *                  of the branch instruction plus 8.
 *
-*  由此可知，此指令编码的最高8位为：0b11101010，低24位根据Boot_file_head的大小动
-*态生成，所以指令的组装过程如下：
+* It can be seen that the highest 8 bits of this instruction code are： 0b11101010，Low 24 based on "Boot_file_head" size
+* State generation, so the assembly process of the instruction is as follows：
 *  ( sizeof( boot_file_head_t ) + sizeof( int ) - 1 ) / sizeof( int )
-*                                              求出文件头占用的“字”的个数
-*  - 2                                         减去PC预取的指令条数
-*  & 0x00FFFFFF                                求出signed-immed-24
-*  | 0xEA000000                                组装成B指令
+*                                              Find the number of "words" occupied by the file header
+*  - 2                                         Subtract the number of instructions prefetched by the PC
+*  & 0x00FFFFFF                                Find signed-immed-24
+*  | 0xEA000000                                Assembled into B command
 *
 *******************************************************************************/
 

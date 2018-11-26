@@ -32,45 +32,43 @@ extern const boot0_file_head_t  BT0_head;
 static void clear_ZI( void );
 static void print_version(void);
 
-extern unsigned int  get_fel_flag(void);
+extern unsigned int get_fel_flag(void);
 extern void show_rtc_reg(void);
-extern void  clear_fel_flag(void);
-
-
+extern void clear_fel_flag(void);
 
 
 /*******************************************************************************
-*函数名称: Boot0_C_part
-*函数原型：void Boot0_C_part( void )
-*函数功能: Boot0中用C语言编写的部分的主流程
-*入口参数: void
-*返 回 值: void
-*备    注:
+* Function name:		Boot0_C_part
+* Function prototype：	void Boot0_C_part( void )
+* Function:				Boot0 (The main flow of the part written in C language)
+* Entry parameter:		void
+* Return value:			void
+* Remarks:
 *******************************************************************************/
 void Boot0_C_part( void )
 {
 	__u32 status;
 	__s32 dram_size;
 	int	index = 0;
-	int   ddr_aotu_scan = 0;
+	int ddr_aotu_scan = 0;
 
-    __u32 fel_flag;
+	__u32 fel_flag;
 
 //	move_RW( );
 	clear_ZI( );
 
 	bias_calibration();
 #if defined(CONFIG_ARCH_SUN9IW1P1) || defined(CONFIG_ARCH_SUN8IW6P1)
-    //do nothing
+	//do nothing
 #else
-    timer_init();
+	timer_init();
 #endif
 
-    UART_open( BT0_head.prvt_head.uart_port, (void *)BT0_head.prvt_head.uart_ctrl, 24*1000*1000 );
+	UART_open( BT0_head.prvt_head.uart_port, (void *)BT0_head.prvt_head.uart_ctrl, 24*1000*1000 );
 	if( BT0_head.prvt_head.enable_jtag )
-    {
+	{
 		jtag_init( (normal_gpio_cfg *)BT0_head.prvt_head.jtag_gpio );
-    }
+	}
 	msg("HELLO! BOOT0 is starting!\n");
 	print_version();
 
@@ -78,31 +76,27 @@ void Boot0_C_part( void )
 	reset_cpux(1);
 #endif
 
+	fel_flag = get_fel_flag();
+	show_rtc_reg();
+	if(fel_flag == BOOT_FEL_FLAG)
+	{
+		clear_fel_flag();
+		msg("eraly jump fel\n");
+		pll_reset();
+		__msdelay(10);
 
-    fel_flag = get_fel_flag();
-    show_rtc_reg();
-    if(fel_flag == BOOT_FEL_FLAG)
-    {
-        clear_fel_flag();
-    	msg("eraly jump fel\n");
-    	pll_reset();
-    	__msdelay(10);
-
-    	jump_to( FEL_BASE );
+		jump_to( FEL_BASE );
     }
-
-
 
 	mmu_system_init(EGON2_DRAM_BASE, 1 * 1024, EGON2_MMU_BASE);
 	mmu_enable();
 
-
-    ddr_aotu_scan = 0;
+	ddr_aotu_scan = 0;
 //	dram_para_display();
 	dram_size = init_DRAM(ddr_aotu_scan, (void *)BT0_head.prvt_head.dram_para);
 	if(dram_size)
 	{
-	    //mdfs_save_value();
+		//mdfs_save_value();
 		msg("dram size =%d\n", dram_size);
 	}
 	else
@@ -118,83 +112,68 @@ void Boot0_C_part( void )
 #endif
 
 #ifdef CONFIG_ARCH_SUN7I
-    check_super_standby_flag();
+	check_super_standby_flag();
 #endif
 
 #if SYS_STORAGE_MEDIA_TYPE == SYS_STORAGE_MEDIA_NAND_FLASH
-		status = load_Boot1_from_nand( );         // 载入Boot1
+	status = load_Boot1_from_nand( );		// Load Boot1
 #elif SYS_STORAGE_MEDIA_TYPE == SYS_STORAGE_MEDIA_SPI_NOR_FLASH
-		status = load_boot1_from_spinor( );         // 载入Boot1
+	status = load_boot1_from_spinor( );		// Load Boot1
 #elif SYS_STORAGE_MEDIA_TYPE == SYS_STORAGE_MEDIA_SD_CARD
-		//dram参数拷贝
-		memcpy((void *)DRAM_PARA_STORE_ADDR, (void *)BT0_head.prvt_head.dram_para, SUNXI_DRAM_PARA_MAX * 4);
-		status = load_boot1_from_sdmmc( (char *)BT0_head.prvt_head.storage_data );  // 载入boot1
+	//dram parameter copy
+	memcpy((void *)DRAM_PARA_STORE_ADDR, (void *)BT0_head.prvt_head.dram_para, SUNXI_DRAM_PARA_MAX * 4);
+	status = load_boot1_from_sdmmc( (char *)BT0_head.prvt_head.storage_data );	// Load Boot1
 #else
-		#error The storage media of Boot1 has not been defined.
+	#error The storage media of Boot1 has not been defined.
 #endif
-
 
 	msg("Ready to disable icache.\n");
 
-	mmu_disable( );                               // disable instruction cache
+	mmu_disable( );		// disable instruction cache
 
 	if( status == OK )
 	{
 
-		//跳转之前，把所有的dram参数写到boot1中
+		// Write all the dram parameters to boot1 before jumping
 		set_dram_para((void *)&BT0_head.prvt_head.dram_para, dram_size);
-		msg("Jump to secend Boot.\n");
+		msg("Jump to second Boot.\n");
 
-		jump_to( UBOOT_BASE );                    // 如果载入Boot1成功，跳转到Boot1处执行
+		jump_to( UBOOT_BASE );		// If Boot1 is successfully loaded, jump to Boot1 to execute.
 	}
 	else
 	{
-//		disable_watch_dog( );                     // disable watch dog
+//		disable_watch_dog( );		// disable watch dog
 
 		pll_reset();
 		msg("Jump to Fel.\n");
-		jump_to( FEL_BASE );                      // 如果载入Boot1失败，将控制权交给Fel
+		jump_to( FEL_BASE );		// If loading Boot1 fails, give control to FEL
 	}
 }
-/*
-************************************************************************************************************
+
+/************************************************************************************************************
 *
 *                                             function
-*
 *    name          :
-*
 *    parmeters     :
-*
 *    return        :
-*
 *    note          :
 *
-*
-************************************************************************************************************
-*/
+************************************************************************************************************/
 static void print_version(void)
 {
 	msg("boot0 version : %s\n", BT0_head.boot_head.platform + 2);
-
 	return;
 }
 
-/*
-************************************************************************************************************
+/************************************************************************************************************
 *
 *                                             function
-*
 *    name          :
-*
 *    parmeters     :
-*
 *    return        :
-*
 *    note          :
 *
-*
-************************************************************************************************************
-*/
+************************************************************************************************************/
 static void clear_ZI( void )
 {
 	__u32 *p32;
@@ -207,7 +186,4 @@ static void clear_ZI( void )
 	p32  = (__u32 *)&Image$$Boot0_RW_ZI$$ZI$$Base;
 
 	memset(p32, 0, size);
-
 }
-
-

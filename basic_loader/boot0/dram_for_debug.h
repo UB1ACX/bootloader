@@ -24,13 +24,14 @@
 
 
 #ifndef   __DRAM_FOR_DEBUG_H__
-#define   __DRAM_FOR_DEBUG_H__
 
-#ifndef   DRAM_PRINK_ENABLE
-#	define   DRAM_PRINK_ENABLE  1
-#endif
+	#define   __DRAM_FOR_DEBUG_H__
 
+	#ifndef   DRAM_PRINK_ENABLE
 
+		#define   DRAM_PRINK_ENABLE  1
+
+	#endif
 
 #endif  //__DRAM_FOR_BOOT_H__
 
